@@ -1,17 +1,20 @@
 // U = "user"
 // U -> E = "some thing"
 
-enum TokenType {
+export enum TokenType {
     EQUAL,
     STRING,
     LEFT_ARROW,
     RIGHT_ARROW,
     IDENTIFIER,
     SEMICOLON,
-    ERROR
+    LEFT_PAREN,
+    RIGHT_PAREN,
+    ERROR,
+    EOF
 }
 
-type Token = {
+export type Token = {
     type: TokenType,
     line: number,
     start: number,
@@ -26,7 +29,7 @@ function isAlphaNumeric(char: string): boolean {
     return (char.length == 1 && /^[a-zA-Z0-9]$/.test(char)) || char == '_';
 }
 
-class Scanner {
+export default class Scanner {
     start = 0;
     current = 0;
     line = 1;
@@ -34,11 +37,11 @@ class Scanner {
     source: string;
 
     constructor(source: string) {
-        this.source = source;
+        this.source = source + '\0';
     }
 
     isAtEnd(): boolean {
-        return this.current >= this.source.length - 1;
+        return this.source[this.current] === '\0';
     }
 
     advance(): string {
@@ -104,6 +107,15 @@ class Scanner {
         }
     }
 
+    addEOF() {
+        this.tokens.push({
+            type:TokenType.EOF,
+            start:this.source.length-1,
+            end:this.source.length,
+            line:this.line,
+        })
+    }
+
     scanTokens(): Token[] {
         while (!this.isAtEnd()) {
             const c = this.advance();
@@ -112,12 +124,19 @@ class Scanner {
                 case ' ':
                 case '\t':
                 case '\r':
-                    continue;
+                    this.start++;
+                    break;
                 case '\n':
                     this.line++;
                     break;
                 case ';':
-                    this.addToken(TokenType.SEMICOLON)
+                    this.addToken(TokenType.SEMICOLON);
+                    break;
+                case '(':
+                    this.addToken(TokenType.LEFT_PAREN);
+                    break;
+                case ')':
+                    this.addToken(TokenType.RIGHT_PAREN);
                     break;
                 case '=':
                     this.addToken(TokenType.EQUAL);
@@ -149,7 +168,7 @@ class Scanner {
                     }
             }
         }
+        this.addEOF()
         return this.tokens;
     }
 }
-
