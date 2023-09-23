@@ -1,6 +1,10 @@
 import { expect, test } from 'vitest'
 import Scanner, { Token, TokenType } from '../src/parser/scanner'
 
+const eof = (source: string, line: number): Token => {
+    return { type: TokenType.EOF, start: source.length, end: source.length + 1, line };
+}
+
 test('test string', () => {
     const source = '"12345"'
     const scanner = new Scanner(source);
@@ -12,12 +16,7 @@ test('test string', () => {
             end: 6,
             line: 1
         },
-        {
-            type:TokenType.EOF,
-            start:7,
-            end:8,
-            line:1
-        }
+        eof(source, 1)
     ]
     expect(tokens).toEqual(expected);
 })
@@ -48,4 +47,34 @@ test('test fixed size tokens', () => {
         start += expected[i].length + 1;
     }
     expect(tokens).toEqual(expectedTokens);
+})
+
+test('test identifiers', () => {
+    const source = 'a123';
+    const scanner = new Scanner(source);
+    const tokens = scanner.scanTokens();
+    expect(tokens).toEqual([
+        {
+            type: TokenType.IDENTIFIER,
+            start: 0,
+            end: 4,
+            line: 1
+        },
+        eof(source, 1)
+    ])
+})
+
+test('test keywords', () => {
+    const source = 'actor';
+    const scanner = new Scanner(source);
+    const tokens = scanner.scanTokens();
+    expect(tokens).toEqual([
+        {
+            type:TokenType.ACTOR,
+            start:0,
+            end:5,
+            line:1,
+        },
+        eof(source,1)
+    ])
 })

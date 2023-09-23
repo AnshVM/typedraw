@@ -6,6 +6,8 @@ export enum TokenType {
     STRING,
     LEFT_ARROW,
     RIGHT_ARROW,
+    ACTOR,
+    ACTION,
     IDENTIFIER,
     SEMICOLON,
     LEFT_PAREN,
@@ -13,6 +15,10 @@ export enum TokenType {
     ERROR,
     EOF
 }
+
+const KEYWORDS = new Map<string,number>();
+KEYWORDS.set("actor",TokenType.ACTOR);
+KEYWORDS.set("action",TokenType.ACTION);
 
 export type Token = {
     type: TokenType,
@@ -71,10 +77,6 @@ export default class Scanner {
         return token;
     }
 
-    peekNext(): string {
-        return this.source[this.current + 1];
-    }
-
     string() {
         this.start++; //string token should include the double quotes, only the string value
         while (this.peek() != '"') {
@@ -92,7 +94,13 @@ export default class Scanner {
         while (isAlphaNumeric(this.peek())) {
             this.advance();
         }
-        this.addToken(TokenType.IDENTIFIER);
+        const lexeme = this.source.slice(this.start,this.current);
+        const tokenType = KEYWORDS.get(lexeme);
+        if(tokenType != undefined) {
+            this.addToken(tokenType);
+        } else {
+            this.addToken(TokenType.IDENTIFIER);
+        }
     }
 
     scannerError(message: string) {
