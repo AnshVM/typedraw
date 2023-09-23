@@ -1,0 +1,9 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`test lexical error 1`] = `
+[
+  "[Line 1]: Unexpected character at '-'.",
+  "[Line 1]: Unexpected character at '/'.",
+  "[Line 1]: Unexpected character at '+'.",
+]
+`;

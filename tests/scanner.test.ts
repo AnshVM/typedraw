@@ -78,3 +78,26 @@ test('test keywords', () => {
         eof(source,1)
     ])
 })
+
+test('test lexical error',() => {
+    const source = "-/->+->";
+    const scanner = new Scanner(source);
+    const tokens = scanner.scanTokens();
+    expect(tokens).toEqual([
+        {
+            type:TokenType.RIGHT_ARROW,
+            start:2,
+            end:4,
+            line:1,
+        },
+        {
+            type:TokenType.RIGHT_ARROW,
+            start:5,
+            end:7,
+            line:1,
+        },
+        eof(source,1)
+    ])
+    expect(scanner.errors.length).toEqual(3)
+    expect(scanner.errors).toMatchSnapshot()
+})

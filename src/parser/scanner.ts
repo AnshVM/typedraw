@@ -16,15 +16,20 @@ export enum TokenType {
     EOF
 }
 
-const KEYWORDS = new Map<string,number>();
-KEYWORDS.set("actor",TokenType.ACTOR);
-KEYWORDS.set("action",TokenType.ACTION);
+const KEYWORDS = new Map<string, number>();
+KEYWORDS.set("actor", TokenType.ACTOR);
+KEYWORDS.set("action", TokenType.ACTION);
 
 export type Token = {
     type: TokenType,
     line: number,
     start: number,
     end: number
+}
+
+export type ScanError = {
+    message: string,
+    token: Token
 }
 
 function isAlpha(char: string): boolean {
@@ -36,11 +41,12 @@ function isAlphaNumeric(char: string): boolean {
 }
 
 export default class Scanner {
-    start = 0;
-    current = 0;
-    line = 1;
-    tokens: Token[] = [];
-    source: string;
+    private start = 0;
+    private current = 0;
+    private line = 1;
+    private tokens: Token[] = [];
+    private source: string;
+    errors: string[] = [];
 
     constructor(source: string) {
         this.source = source + '\0';
@@ -94,33 +100,28 @@ export default class Scanner {
         while (isAlphaNumeric(this.peek())) {
             this.advance();
         }
-        const lexeme = this.source.slice(this.start,this.current);
+        const lexeme = this.source.slice(this.start, this.current);
         const tokenType = KEYWORDS.get(lexeme);
-        if(tokenType != undefined) {
+        if (tokenType != undefined) {
             this.addToken(tokenType);
         } else {
             this.addToken(TokenType.IDENTIFIER);
         }
     }
 
-    scannerError(message: string) {
-        const error = `[Line ${this.line}]: ${message} at ${this.source.slice(this.start, this.current)}`
-        //for now, we are only logging the error
-        console.log(error)
-        if (this.isAtEnd()) {
-            return
-        }
-        while (this.peek() != ';') {
-            this.advance();
-        }
+    scannerError(message: string): string {
+        const error = `[Line ${this.line}]: ${message} at '${this.source.slice(this.start, this.current)}'.`;
+        this.errors.push(error);
+        this.start++;
+        return error
     }
 
     addEOF() {
         this.tokens.push({
-            type:TokenType.EOF,
-            start:this.source.length-1,
-            end:this.source.length,
-            line:this.line,
+            type: TokenType.EOF,
+            start: this.source.length - 1,
+            end: this.source.length,
+            line: this.line,
         })
     }
 
@@ -154,7 +155,7 @@ export default class Scanner {
                         this.advance();
                         this.addToken(TokenType.RIGHT_ARROW);
                     } else {
-                        this.scannerError("Unexpected character '-'");
+                        this.scannerError("Unexpected character");
                     }
                     break;
                 case '<':
@@ -162,7 +163,7 @@ export default class Scanner {
                         this.advance();
                         this.addToken(TokenType.LEFT_ARROW);
                     } else {
-                        this.scannerError("Unexpected character '<'");
+                        this.scannerError("Unexpected character");
                     }
                     break;
                 case '"':
@@ -174,6 +175,7 @@ export default class Scanner {
                     } else {
                         this.scannerError("Unexpected character");
                     }
+                    break;
             }
         }
         this.addEOF()
