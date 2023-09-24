@@ -8,10 +8,14 @@
 import { ActionDeclaration, ActorDeclartion, Arrow, Statement } from './ast';
 import { Token, TokenType } from './scanner';
 
+export type ParseError = string;
+
 export default class Parser {
     tokens: Token[] = [];
     current = 0;
-    source: string
+    source: string;
+    parseErrors: ParseError[] = [];
+    statements: Statement[] = [];
 
     constructor(tokens: Token[], source: string) {
         this.tokens = tokens;
@@ -22,9 +26,9 @@ export default class Parser {
         return this.tokens[this.current];
     }
 
-    previous(): Token | null{
-        if(this.current == 0) return null;
-        return this.tokens[this.current - 1]; 
+    previous(): Token | null {
+        if (this.current == 0) return null;
+        return this.tokens[this.current - 1];
     }
 
     isAtEnd(): boolean {
@@ -32,9 +36,9 @@ export default class Parser {
     }
 
     action(): ActionDeclaration {
-        const left = this.consume(TokenType.IDENTIFIER,"Expected actor name");
-        let arrow;        
-        switch(this.peek().type){
+        const left = this.consume(TokenType.IDENTIFIER, "Expected actor name");
+        let arrow;
+        switch (this.peek().type) {
             case TokenType.RIGHT_ARROW:
                 this.advance()
                 arrow = Arrow.RIGHT;
@@ -47,24 +51,24 @@ export default class Parser {
                 throw new Error(this.generateParseError("Expected '->' or '<-'"));
         }
 
-        const right = this.consume(TokenType.IDENTIFIER,"Expected actor name");
-        this.consume(TokenType.EQUAL,"Expected '='");
-        const value = this.consume(TokenType.STRING,"Expected string");
+        const right = this.consume(TokenType.IDENTIFIER, "Expected actor name");
+        this.consume(TokenType.EQUAL, "Expected '='");
+        const value = this.consume(TokenType.STRING, "Expected string");
         return {
-            leftActor:this.source.slice(left.start,left.end),
-            rightActor:this.source.slice(right.start,right.end),
+            leftActor: this.source.slice(left.start, left.end),
+            rightActor: this.source.slice(right.start, right.end),
             direction: arrow,
-            value: this.source.slice(value.start,value.end),
+            value: this.source.slice(value.start, value.end),
         }
     }
 
     actor(): ActorDeclartion {
-        const name = this.consume(TokenType.IDENTIFIER,"Expected actor name");
-        this.consume(TokenType.EQUAL,"Expected '='");
-        const value = this.consume(TokenType.STRING,"Expected string");
+        const name = this.consume(TokenType.IDENTIFIER, "Expected actor name");
+        this.consume(TokenType.EQUAL, "Expected '='");
+        const value = this.consume(TokenType.STRING, "Expected string");
         return {
-            name: this.source.slice(name.start,name.end),
-            value: this.source.slice(value.start,value.end),
+            name: this.source.slice(name.start, name.end),
+            value: this.source.slice(value.start, value.end),
         }
     }
 
@@ -81,7 +85,7 @@ export default class Parser {
         return this.peek().type === type;
     }
 
-    consume(type: TokenType, message: string):Token {
+    consume(type: TokenType, message: string): Token {
         if (this.match(type)) {
             return this.advance();
         }
@@ -108,29 +112,31 @@ export default class Parser {
 
     synchronize() {
         this.advance();
-        while(!this.isAtEnd()) {
-            if(this.previous()?.type === TokenType.SEMICOLON) return;
+        while (!this.isAtEnd()) {
+            if (this.previous()?.type === TokenType.SEMICOLON) return;
 
-            switch(this.peek().type) {
+            switch (this.peek().type) {
                 case TokenType.ACTION:
                 case TokenType.ACTOR:
                     return;
             }
             this.advance();
-        } 
+        }
     }
 
     parse(): Statement[] {
-        const statements: Statement[] = [];
         while (!this.isAtEnd()) {
             try {
                 let stmt = this.statement();
-                statements.push(stmt);
+                this.statements.push(stmt);
             } catch (error) {
-                this.synchronize();
+                if (error instanceof Error) {
+                    this.parseErrors.push(error.message);
+                    this.synchronize();
+                }
             }
         }
-        return statements;
+        return this.statements;
     }
 
 }

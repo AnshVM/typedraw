@@ -2,18 +2,18 @@
 // U -> E = "some thing"
 
 export enum TokenType {
-    EQUAL,
-    STRING,
-    LEFT_ARROW,
-    RIGHT_ARROW,
-    ACTOR,
-    ACTION,
-    IDENTIFIER,
-    SEMICOLON,
-    LEFT_PAREN,
-    RIGHT_PAREN,
-    ERROR,
-    EOF
+    EQUAL = 0,
+    STRING = 1,
+    LEFT_ARROW = 2,
+    RIGHT_ARROW = 3,
+    ACTOR = 4,
+    ACTION = 5,
+    IDENTIFIER = 6,
+    SEMICOLON = 7,
+    LEFT_PAREN = 8,
+    RIGHT_PAREN = 9,
+    ERROR = 10,
+    EOF = 11
 }
 
 const KEYWORDS = new Map<string, number>();
@@ -93,6 +93,7 @@ export default class Scanner {
             }
         }
         this.addToken(TokenType.STRING);
+        this.start++;
         this.advance();
     }
 
@@ -136,6 +137,7 @@ export default class Scanner {
                     this.start++;
                     break;
                 case '\n':
+                    this.start++;
                     this.line++;
                     break;
                 case ';':
