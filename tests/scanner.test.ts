@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import Scanner, { Token, TokenType } from '../src/parser/scanner'
+import Scanner, { Token, TokenType } from '../src/language/scanner'
 
 const eof = (source: string, line: number): Token => {
     return { type: TokenType.EOF, start: source.length, end: source.length + 1, line };

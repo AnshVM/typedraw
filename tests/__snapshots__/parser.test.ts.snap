@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`synchronization 1`] = `
+[
+  "[Line: 2] Expected actor name : at ' '",
+]
+`;
+
+exports[`synchronization 2`] = `
+[
+  {
+    "direction": 1,
+    "leftActor": "A",
+    "rightActor": "B",
+    "value": "somestring",
+  },
+]
+`;
+
+exports[`test missing actor name error 1`] = `
+[
+  "[Line: 1] Expected actor name : at ' '",
+]
+`;
