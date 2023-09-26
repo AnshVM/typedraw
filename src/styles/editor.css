@@ -1,0 +1,38 @@
+.container__editor textarea {
+  outline: 0;
+}
+
+.class_token_semicolon {
+  color:#a77dfa;
+}
+
+.class_token_equal {
+  color: #001ab0;
+}
+
+.class_token_leftarrow {
+  color: #d9b502;
+}
+
+.class_token_rightarrow {
+  color: #d9b502;
+}
+
+.class_token_actor {
+  color: #3c91fa;
+}
+
+.class_token_action {
+  color: #3c91fa;
+}
+
+.class_token_string {
+  color:#04c75f;
+}
+
+.class_token_identifier {
+  color: #f75774;
+}
+
+
+
