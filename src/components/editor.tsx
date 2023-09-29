@@ -17,14 +17,14 @@ export default function Editor({input,setInput,scanner}:EditorProps) {
     }    
 
     return (
-        <div className="py-10">
+        <div className="h-full">
             <CodeEditor
                 value={input}
                 onValueChange={code => handleChange(code)}
                 highlight={() => scanner.highlited.join('')}
-                padding={10}
-                className="container__editor bg-gray-100 h-52 w-1/2 
-                mx-auto rounded-lg font-mono"
+                padding={2}
+                className="container__editor bg-gray-100 w-96
+                mx-auto rounded-lg font-mono h-full"
             />
         </div>
     )

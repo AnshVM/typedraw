@@ -62,8 +62,8 @@ export default class Scanner {
     private start = 0;
     private current = 0;
     private line = 1;
-    private tokens: Token[] = [];
     private source: string;
+    tokens: Token[] = [];
     errors: string[] = [];
     highlited:string[] = [];
 

@@ -1,14 +1,16 @@
 import { Statement, ActionDeclaration, ActorDeclartion, Types, Arrow } from "../language/ast";
 import { drawArrow, drawLine } from "./utils";
 
-const FONT = '14px arial';
 const SPACING = 100;
-const HEIGHT = 80;
+const HEIGHT = 100;
 const PADDING = HEIGHT / 2;
 const ACTION_SPACING_VERTICAL = 50;
 const TIMELINE_LENGTH = 100;
 const X = 0;
 const Y = 0;
+const FONT_SIZE = 20;
+const MAX_BOX_WIDTH = 150;
+const DEFAULT_FONT = `${FONT_SIZE}x arial`;
 
 type Actor = {
     index: number,
@@ -21,13 +23,14 @@ export default class Renderer {
     actors = new Map<string, Actor>();
     actions: ActionDeclaration[] = [];
     width: number;
+    fontSize:number = 20; 
     timelineLength = 0;
 
     constructor(statements: Statement[], context: CanvasRenderingContext2D, width: number) {
         this.statements = statements;
         this.context = context;
         this.width = width;
-        context.font = FONT;
+        context.font = `${this.fontSize}px arial`;
     }
 
     actor(stmt: ActorDeclartion) {
@@ -50,21 +53,38 @@ export default class Renderer {
         }
     }
 
+    scaleFont(n:number) {
+        this.fontSize = this.fontSize + n;
+        this.context.font = `${this.fontSize}px arial`;
+    }
+
+    defaultFont() {
+        this.fontSize = 28;
+        this.context.font = DEFAULT_FONT;
+    }
+
     drawActors(x: number, y: number) {
         this.actors.forEach(({ value }) => {
             const boxWidth = this.getBoxWidth();
             this.context.strokeRect(x, y, boxWidth, HEIGHT);
 
-            const textMetrics = this.context.measureText(value);
+            let textMetrics = this.context.measureText(value);
+
+            while(textMetrics.width > boxWidth ) {
+                this.scaleFont(-1); 
+                textMetrics = this.context.measureText(value);
+            } 
+
             const x_text = x + (boxWidth - textMetrics.width) / 2
 
-            this.context.fillText(value, x_text, y + PADDING, boxWidth - PADDING);
+            this.context.fillText(value, x_text, y + PADDING, boxWidth);
             x += boxWidth + SPACING;
         })
     }
 
-    getBoxWidth() {
-        return (this.width - ((this.actors.size - 1) * SPACING)) / this.actors.size
+    getBoxWidth(): number {
+        const available = (this.width - ((this.actors.size - 1) * SPACING)) / this.actors.size
+        return available > MAX_BOX_WIDTH ? MAX_BOX_WIDTH : available;
     }
 
     boxBottomMid(index: number): number[] {
@@ -103,10 +123,7 @@ export default class Renderer {
 
 
     drawActions() {
-        console.log(this.actions)
-        console.log(this.actors)
         this.actions.forEach((action, index) => {
-            console.log(action)
             this.extendTimeline()
             const leftActor = action.leftActor;
             const rightActor = action.rightActor;
@@ -118,10 +135,15 @@ export default class Renderer {
             const [x1, y1] = this.next(leftActor, index)
             const [x2, y2] = this.next(rightActor, index);
 
-            const textWidth = this.context.measureText(action.value).width;
-            const padding = Math.abs(x2 - x1) - textWidth;
-            this.context.strokeText(action.value,Math.min(x1,x2)+padding/2,y1-3,Math.abs(x2-x1));
-
+            let textMetrics = this.context.measureText(action.value);
+            
+            while(textMetrics.width > Math.abs(x2-x1)) {
+                this.scaleFont(-1);
+                textMetrics = this.context.measureText(action.value);
+            }
+            const padding = Math.abs(x2 - x1) - textMetrics.width;
+            this.context.fillText(action.value,Math.min(x1,x2)+padding/2,y1-3,Math.abs(x2-x1));
+            this.defaultFont();
             switch (direction) {
                 case Arrow.RIGHT:
                     drawArrow(this.context, x1, y1, x2, y2);
@@ -138,6 +160,10 @@ export default class Renderer {
         this.statements.forEach((stmt: Statement) => {
             this.statement(stmt)
         })
+
+        const requiredWidth = (this.getBoxWidth() * this.actors.size) + (SPACING * (this.actors.size - 1));
+
+        this.context.translate((this.width - requiredWidth)/2,20);
 
         this.drawActors(X, Y);
         this.drawActions();
